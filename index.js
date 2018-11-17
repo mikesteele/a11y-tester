@@ -69,4 +69,4 @@ class a11yTester {
   }
 }
 
-module.exports = a11yTester;
+export default a11yTester;

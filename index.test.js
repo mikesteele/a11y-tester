@@ -7,7 +7,7 @@ const React = require('react');
 const mount = require('enzyme').mount;
 const expect = require('chai').expect;
 const sinon = require('sinon');
-const a11yTester = require('./index');
+const a11yTester = require('./index').default;
 const enzyme = require('enzyme');
 const Adapter = require('enzyme-adapter-react-16');
 
