@@ -4,7 +4,7 @@
   "description": "TODO",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --require babel-polyfill --require @babel/register example.test.js"
+    "test": "mocha --require @babel/register -r jsdom-global/register index.test.js"
   },
   "repository": {
     "type": "git",
@@ -21,10 +21,13 @@
     "@babel/core": "^7.1.6",
     "@babel/polyfill": "^7.0.0",
     "@babel/preset-env": "^7.1.6",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
     "babel-polyfill": "^6.26.0",
     "chai": "^4.2.0",
     "enzyme": "^3.7.0",
     "enzyme-adapter-react-16": "^1.7.0",
+    "jsdom": "^13.0.0",
+    "jsdom-global": "^3.0.2",
     "mocha": "^5.2.0",
     "react": "^16.6.3",
     "react-a11y": "^1.1.0",
