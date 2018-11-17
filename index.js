@@ -1,5 +1,5 @@
 const mount = require('enzyme').mount;
-const rules = {}; // TODO
+const rules = require('./node_modules/react-a11y/src/rules').default;
 
 class a11yTester {
   constructor() {

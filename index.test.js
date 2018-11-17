@@ -12,8 +12,7 @@ const enzyme = require('enzyme');
 const Adapter = require('enzyme-adapter-react-16');
 
 const tester = new a11yTester();
-
-const rules = require('./node_modules/react-a11y/src/rules');
+const rules = require('./node_modules/react-a11y/src/rules').default;
 
 enzyme.configure({ adapter: new Adapter() });
 
@@ -24,7 +23,7 @@ describe('react-a11y-enzyme', () => {
         <div>
           <div>Title</div>
           <div>
-            <img src="image.jpg"/>
+            <img src='image.jpg'/>
           </div>
         </div>
       );
@@ -240,7 +239,7 @@ describe('react-a11y-enzyme', () => {
   });
   describe('react-a11y examples', () => {
     describe('run all react-a11y examples', () => {
-      const allRules = Object.keys(rules.default);
+      const allRules = Object.keys(rules);
       allRules.forEach(file => {
         it(`${file} should pass`, done => {
           const test = require(`./node_modules/react-a11y/src/rules/${file}`);
