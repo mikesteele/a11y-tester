@@ -12,7 +12,7 @@ yarn add a11y-tester
 
 ## Usage
 
-```
+```javascript
 // Assumes Enzyme is already set up
 import Enzyme from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
