@@ -40,7 +40,7 @@ tester
 
 ## What works
 
-* Testing whether a component subtree has a11y violations with `test()` works with resolve/reject.
+* Testing whether a component subtree has a11y violations with `test()`.
 
 ## What's still TODO?
 
