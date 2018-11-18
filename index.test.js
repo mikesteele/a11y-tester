@@ -1,13 +1,18 @@
 // Babel needs to transform react-a11y rule modules
 require('@babel/register')({
-  ignore: []
+  ignore: [
+    (filepath) => {
+      return !filepath.includes('react-a11y');
+    }
+  ]
 });
 
 const React = require('react');
 const mount = require('enzyme').mount;
+const shallow = require('enzyme').shallow;
 const expect = require('chai').expect;
 const sinon = require('sinon');
-const a11yTester = require('./index').default;
+const a11yTester = require('./dist/index').default;
 const enzyme = require('enzyme');
 const Adapter = require('enzyme-adapter-react-16');
 
@@ -65,6 +70,21 @@ describe('react-a11y-enzyme', () => {
     });
   });
   describe('runRule', () => {
+    describe('Component', done => {
+      it('should skip tests if custom component', done => {
+        const Skip = (props) => (
+          <div/>
+        );
+        const node = shallow(<Skip/>);
+        tester.runRule(node, { test: () => true})
+          .then(result => {
+            done();
+          })
+          .catch(err => {
+            console.warn(err);
+          })
+      });
+    });
     describe('Mutliple rules', () => {
       it('should test each rule, if rule has multiple', done => {
         const node = mount(<div/>);

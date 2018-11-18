@@ -8,6 +8,9 @@ class a11yTester {
 
   runRule(node, rule) {
     return new Promise((resolve, reject) => {
+      if (!node.instance() || !node.instance().tagName) {
+        resolve();
+      }
       if (rule.map) {
         const results = rule.map(r => {
           if (!r.tagName) {
