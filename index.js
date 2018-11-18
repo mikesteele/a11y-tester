@@ -17,7 +17,7 @@ class a11yTester {
             return r.test(node.instance().tagName.toLowerCase(), node.props(), node.children, {options: []})
           } else if  (r.tagName.toUpperCase() === node.instance().tagName){
             return r.test(node.instance().tagName.toLowerCase(), node.props(), node.children, {options: []})
-          } {
+          } else {
             return true
           }
         });
