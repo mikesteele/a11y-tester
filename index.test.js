@@ -18,13 +18,15 @@ const rules = require('./node_modules/react-a11y/src/rules').default;
 
 enzyme.configure({ adapter: new Adapter() });
 
+const rewire = require('rewire');
+const a11yTester = rewire('./index');
 const {
   test,
   getAllNodesInSubtree,
   getSelectorForNode,
   runRule,
   runTests
-} = require('./index');
+} = a11yTester;
 
 describe('a11y-tester', () => {
   describe('getAllNodesInSubtree', () => {
@@ -42,7 +44,8 @@ describe('a11y-tester', () => {
   });
   describe('test', () => {
     it('should call runTests on all nodes in subtree', done => {
-      const spy = sinon.spy(runTests);
+      const stub = sinon.stub();
+      a11yTester.__set__('runTests', stub);
       test(
         <div>
           <table>
@@ -54,21 +57,22 @@ describe('a11y-tester', () => {
           </table>
         </div>
       ).then(result => {
-        expect(spy.callCount).to.equal(5);
-        spy.restore();
+        expect(stub.callCount).to.equal(5);
+        a11yTester.__set__('runTests', runTests);
         done();
       }).catch(err => {});
     });
   });
   describe('runTests', () => {
     it('should call runRule for every rule', done => {
-      const spy = sinon.spy(runRule);
+      const stub = sinon.stub();
+      a11yTester.__set__('runRule', stub);
       const node = mount(<div/>);
       runTests(node)
         .then(result => {
           const numberOfRules = Object.keys(rules).length;
-          expect(spy.callCount).to.equal(numberOfRules);
-          spy.restore();
+          expect(stub.callCount).to.equal(numberOfRules);
+          a11yTester.__set__('runRule', runRule);
           done();
         }).catch(err => {});
 
