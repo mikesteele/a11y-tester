@@ -1,8 +1,12 @@
 # a11y-tester
 
+[![Build Status](https://travis-ci.com/mikesteele/a11y-tester.svg?branch=master)](https://travis-ci.com/mikesteele/a11y-tester) [![Coverage Status](https://coveralls.io/repos/github/mikesteele/a11y-tester/badge.svg?branch=master)](https://coveralls.io/github/mikesteele/a11y-tester?branch=master)
+
 Wrapper for using `react-a11y` (https://github.com/reactjs/react-a11y) with Enzyme.
 
 Tests a component tree for any a11y violations.
+
+
 
 ## Installation
 
