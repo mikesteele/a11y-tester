@@ -7,7 +7,13 @@ Tests a component tree for any a11y violations.
 ## Installation
 
 ```
-yarn add a11y-tester
+yarn add --dev a11y-tester
+```
+
+or
+
+```
+npm install a11y-tester --save-dev
 ```
 
 ## Usage
@@ -18,12 +24,9 @@ import Enzyme from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 Enzyme.configure({ adapter: new Adapter() });
 
-// Set up tester
-const a11yTester = require('a11y-tester').default;
-const tester = new a11yTester();
+const { test } = require('a11y-tester');
 
-tester
-  .test(<App/>)
+test(<App/>)
   .then(() => {
     // All tests passed! :-)
   })

@@ -12,19 +12,26 @@ const mount = require('enzyme').mount;
 const shallow = require('enzyme').shallow;
 const expect = require('chai').expect;
 const sinon = require('sinon');
-const a11yTester = require('./dist/index').default;
 const enzyme = require('enzyme');
 const Adapter = require('enzyme-adapter-react-16');
-
-const tester = new a11yTester();
 const rules = require('./node_modules/react-a11y/src/rules').default;
 
 enzyme.configure({ adapter: new Adapter() });
 
-describe('react-a11y-enzyme', () => {
+const rewire = require('rewire');
+const a11yTester = rewire('./index');
+const {
+  test,
+  getAllNodesInSubtree,
+  getSelectorForNode,
+  runRule,
+  runTests
+} = a11yTester;
+
+describe('a11y-tester', () => {
   describe('getAllNodesInSubtree', () => {
     it('should test all nodes in subtree', () => {
-      const allNodes = tester.getAllNodesInSubtree(
+      const allNodes = getAllNodesInSubtree(
         <div>
           <div>Title</div>
           <div>
@@ -37,8 +44,9 @@ describe('react-a11y-enzyme', () => {
   });
   describe('test', () => {
     it('should call runTests on all nodes in subtree', done => {
-      const spy = sinon.spy(tester, 'runTests');
-      tester.test(
+      const stub = sinon.stub();
+      a11yTester.__set__('runTests', stub);
+      test(
         <div>
           <table>
             <tbody>
@@ -49,21 +57,22 @@ describe('react-a11y-enzyme', () => {
           </table>
         </div>
       ).then(result => {
-        expect(spy.callCount).to.equal(5);
-        spy.restore();
+        expect(stub.callCount).to.equal(5);
+        a11yTester.__set__('runTests', runTests);
         done();
       }).catch(err => {});
     });
   });
   describe('runTests', () => {
     it('should call runRule for every rule', done => {
-      const spy = sinon.spy(tester, 'runRule');
+      const stub = sinon.stub();
+      a11yTester.__set__('runRule', stub);
       const node = mount(<div/>);
-      tester.runTests(node)
+      runTests(node)
         .then(result => {
           const numberOfRules = Object.keys(rules).length;
-          expect(spy.callCount).to.equal(numberOfRules);
-          spy.restore();
+          expect(stub.callCount).to.equal(numberOfRules);
+          a11yTester.__set__('runRule', runRule);
           done();
         }).catch(err => {});
 
@@ -76,7 +85,7 @@ describe('react-a11y-enzyme', () => {
           <div/>
         );
         const node = shallow(<Skip/>);
-        tester.runRule(node, { test: () => true})
+        runRule(node, { test: () => true})
           .then(result => {
             done();
           })
@@ -100,7 +109,7 @@ describe('react-a11y-enzyme', () => {
             }
           }
         ]
-        tester.runRule(node, testRule)
+        runRule(node, testRule)
           .then(result => {
             done();
           }).catch(err => {});
@@ -119,7 +128,7 @@ describe('react-a11y-enzyme', () => {
             }
           }
         ]
-        tester.runRule(node, testRule)
+        runRule(node, testRule)
           .then(result => {})
           .catch(err => {
             done();
@@ -140,7 +149,7 @@ describe('react-a11y-enzyme', () => {
             }
           }
         ]
-        tester.runRule(node, testRule)
+        runRule(node, testRule)
           .then(result => {})
           .catch(err => {
             // Should fail, because the first test was run.
@@ -162,7 +171,7 @@ describe('react-a11y-enzyme', () => {
             }
           }
         ]
-        tester.runRule(node, testRule)
+        runRule(node, testRule)
           .then(result => {
             // Should pass, because the first test wasn't run.
             done();
@@ -178,7 +187,7 @@ describe('react-a11y-enzyme', () => {
             }
           }
         ]
-        tester.runRule(node, testRule)
+        runRule(node, testRule)
           .then(result => {
             done();
           })
@@ -193,7 +202,7 @@ describe('react-a11y-enzyme', () => {
             }
           }
         ]
-        tester.runRule(node, testRule)
+        runRule(node, testRule)
           .then(result => {})
           .catch(err => {
             done();
@@ -208,7 +217,7 @@ describe('react-a11y-enzyme', () => {
             return true;
           }
         };
-        tester.runRule(node, testRule)
+        runRule(node, testRule)
           .then(result => {
             done();
           })
@@ -221,7 +230,7 @@ describe('react-a11y-enzyme', () => {
             return false;
           }
         };
-        tester.runRule(node, testRule)
+        runRule(node, testRule)
           .then(result => {})
           .catch(err => {
             done();
@@ -235,7 +244,7 @@ describe('react-a11y-enzyme', () => {
             return false;
           }
         };
-        tester.runRule(node, testRule)
+        runRule(node, testRule)
           .then(result => {})
           .catch(err => {
             done();
@@ -249,11 +258,43 @@ describe('react-a11y-enzyme', () => {
             return false;
           }
         };
-        tester.runRule(node, testRule)
+        runRule(node, testRule)
           .then(result => {
             done();
           })
           .catch(err => {});
+      });
+    });
+    describe('getSelectorForNode', () => {
+      it('should get selector for node', () => {
+        const tree = mount(
+          <table>
+            <tbody>
+              <tr/>
+            </tbody>
+          </table>
+        );
+        const node = tree.find('tr');
+        const selector = getSelectorForNode(node);
+        expect(selector).to.equal('table > tbody > tr');
+      });
+      it('should work for custom components', () => {
+        const CustomTable = (props) => (
+          <table>
+            <tbody>
+              <tr/>
+            </tbody>
+          </table>
+        );
+        const tree = mount(<CustomTable/>);
+        const node = tree.find('tr');
+        const selector = getSelectorForNode(node);
+        expect(selector).to.equal('CustomTable > table > tbody > tr');
+      });
+      it('should work for node with no parents', () => {
+        const node = mount(<div/>);
+        const selector = getSelectorForNode(node);
+        expect(selector).to.equal('div');
       });
     });
   });
@@ -266,7 +307,7 @@ describe('react-a11y-enzyme', () => {
           const rule = test.default;
           const { pass, fail } = test;
           const node = mount(pass[0].render(React));
-          tester.runRule(node, rule)
+          runRule(node, rule)
             .then(result => {
               done();
             })
@@ -277,7 +318,7 @@ describe('react-a11y-enzyme', () => {
           const rule = test.default;
           const { pass, fail } = test;
           const node = mount(fail[0].render(React));
-          tester.runRule(node, rule)
+          runRule(node, rule)
             .then(result => {})
             .catch(err => {
               done();
