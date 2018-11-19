@@ -24,9 +24,9 @@ import Enzyme from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 Enzyme.configure({ adapter: new Adapter() });
 
-const { a11yTest } = require('a11y-tester');
+const { test } = require('a11y-tester');
 
-a11yTest(<App/>)
+test(<App/>)
   .then(() => {
     // All tests passed! :-)
   })
