@@ -24,9 +24,9 @@ const runRule = (node, rule) => {
     if (rule.test) {
       let result;
       if (!rule.tagName) {
-        result = rule.test(node.instance().tagName.toLowerCase(), node.props(), node.children, {options: []})
-      } else if  (rule.tagName.toUpperCase() === node.instance().tagName){
-        result = rule.test(node.instance().tagName.toLowerCase(), node.props(), node.children, {options: []})
+        result = rule.test(node.name(), node.props(), node.children, {options: []})
+      } else if  (rule.tagName === node.name()){
+        result = rule.test(node.name(), node.props(), node.children, {options: []})
       } else {
         result = true
       }
@@ -59,7 +59,6 @@ const test = (jsx) => {
 }
 
 const getSelectorForNode = (node) => {
-  // TODO - Can I use node.name in other places?
   const parents = node.parents();
   const parentsTagNames = parents.map(node => node.name());
   parentsTagNames.unshift(node.name());
