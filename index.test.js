@@ -256,6 +256,38 @@ describe('react-a11y-enzyme', () => {
           .catch(err => {});
       });
     });
+    describe('getSelectorForNode', () => {
+      it('should get selector for node', () => {
+        const tree = mount(
+          <table>
+            <tbody>
+              <tr/>
+            </tbody>
+          </table>
+        );
+        const node = tree.find('tr');
+        const selector = tester.getSelectorForNode(node);
+        expect(selector).to.equal('table > tbody > tr');
+      });
+      it('should work for custom components', () => {
+        const CustomTable = (props) => (
+          <table>
+            <tbody>
+              <tr/>
+            </tbody>
+          </table>
+        );
+        const tree = mount(<CustomTable/>);
+        const node = tree.find('tr');
+        const selector = tester.getSelectorForNode(node);
+        expect(selector).to.equal('CustomTable > table > tbody > tr');
+      });
+      it('should work for node with no parents', () => {
+        const node = mount(<div/>);
+        const selector = tester.getSelectorForNode(node);
+        expect(selector).to.equal('div');
+      });
+    });
   });
   describe('react-a11y examples', () => {
     describe('run all react-a11y examples', () => {

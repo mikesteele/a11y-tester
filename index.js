@@ -65,6 +65,14 @@ class a11yTester {
     });
   }
 
+  getSelectorForNode(node) {
+    // TODO - Can I use node.name in other places?
+    const parents = node.parents();
+    const parentsTagNames = parents.map(node => node.name());
+    parentsTagNames.unshift(node.name());
+    return parentsTagNames.reverse().join(' > ');
+  }
+
   getAllNodesInSubtree(jsx) {
     const wrapper = mount(jsx);
     const allNodes = wrapper.find(':not([___A11Y_TESTER___])'); // wrapper.find(*) isn't supported
