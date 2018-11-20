@@ -50,7 +50,7 @@ const App = (props) => (
 test(<App/>)
   .then(() => {})
   .catch(violations => {
-    /**
+  /**
     [{
       "selector": "App > div > img",
       "failedRules": [
@@ -68,7 +68,7 @@ test(<App/>)
         }]
       ]
     }]
-     **/
+  **/
   });
 ```
 
