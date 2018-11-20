@@ -393,3 +393,15 @@ describe('a11y-tester', () => {
     });
   });
 });
+const App = (props) => (
+  <div>
+    <img src='image.png'/>
+    <div onMouseOver={() => {}}/>
+  </div>
+)
+
+it('x', () => {
+  test( <App/>).then().catch(err => {
+      console.warn(JSON.stringify(err));
+    })
+})

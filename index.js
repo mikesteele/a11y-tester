@@ -2,102 +2,48 @@ const mount = require('enzyme').mount;
 const rules = require('./node_modules/react-a11y/src/rules').default;
 
 /**
- * testRule(node, rule)
+ * test(jsx)
  *
- * Tests a react-a11y rule against a node.
- * Returns test result.
- */
-const testRule = (node, rule) => {
-  // Test if the rule is for any node, or for this type of node in particular
-  if (!rule.tagName || rule.tagName === node.name()) {
-    return rule.test(
-      node.name(),
-      node.props(),
-      node.children,
-      {
-        options: []
-      }
-    );
-  } else {
-    return true; // Test isn't for this type of node, skip
-  }
-};
-
-/**
- * runMultipleRules(node, rules, resolve)
+ * Returns a Promise of test results.
+ * If resolved, all tests passed.
+ * If failed, rejected value takes form of:
  *
- * Runs a react-a11y rule set against a node.
- * Returns a Promise of a test result.
+ [{
+   "selector": "div > img",
+   "failedRules": [
+     [{
+      "msg": "The img does not have an `alt` prop, screen-readers will not know what it is",
+      "url": "https://dev.w3.org/html5/alt-techniques"
+     }]
+   ]
+ }]
  */
-const runMultipleRules = (node, rules, resolve) => {
-  const results = rules.map(rule => testRule(node, rule));
-  if (results.includes(false)) {
-    // Some rule failed.
-    const failedRules = results.map((result, index) => {
-      if (result === false) {
-        return {
-          msg: rules[index]['msg'],
-          url: rules[index]['url']
-        };
-      }
-    }).filter(Boolean);
-    // Get failed rules, filtering out passing ones.
-    resolve({
-      passed: false,
-      failedRules: failedRules
-    });
-  } else {
-    resolve({
-      passed: true
-    });
-  }
-}
-
-/**
- * runSingleRule(node, rule, resolve)
- *
- * Runs a react-a11y rule against a node.
- * Returns a Promise of a test result.
- */
-const runSingleRule = (node, rule, resolve) => {
-  const passed = testRule(node, rule);
-  if (passed) {
-    resolve({
-      passed: true
-    });
-  } else {
-    resolve({
-      passed: false,
-      failedRules: [{
-        msg: rule.msg,
-        url: rule.url
-      }]
-    });
-  }
-};
-
-/**
- * runRule(node, rule)
- *
- * Runs a react-a11y rule or rules against a node.
- * Returns a Promise of a test result.
- */
-const runRule = (node, rule) => {
-  return new Promise(resolve => {
-    if (!node.instance()) {
-      // If the Node is a React component, we can't test it.
-      resolve({
-        passed: true
+const test = (jsx) => {
+  return new Promise((resolve, reject) => {
+    const allNodes = getAllNodesInSubtree(jsx);
+    const runTestsOnAllNodes = allNodes.map(runTests);
+    Promise.all(runTestsOnAllNodes)
+      .then(results => {
+        const failedResults = results.filter(result => !result.passed);
+        if (failedResults.length) {
+          failedResults.forEach(result => delete result.passed);
+          reject(failedResults);
+        } else {
+          resolve();
+        }
       });
-    }
-    if (rule.map) {
-      // Some rules in react-a11y are arrays, so we'll need to iterate & test each.
-      runMultipleRules(node, rule, resolve);
-    }
-    if (rule.test) {
-      runSingleRule(node, rule, resolve);
-    }
   });
+};
+
+/**
+ * getAllNodesInSubtree(jsx)
+ *
+ * Returns wrapper of all nodes in subtree.
+ */
+const getAllNodesInSubtree = (jsx) => {
+  const wrapper = mount(jsx);
+  const allNodes = wrapper.find(':not([___A11Y_TESTER___])'); // wrapper.find(*) isn't supported
+  return allNodes;
 }
 
 /**
@@ -129,41 +75,106 @@ const runTests = (node) => {
         }
       });
   });
-}
+};
 
 /**
- * test(jsx)
+ * runRule(node, rule)
  *
- * Returns a Promise of a11y test results.
- * If resolves, all tests passed.
- * If failed, rejected value takes form of:
- *
- [{
-   "selector": "div > img",
-   "failedRules": [
-     [{
-      "msg": "The img does not have an `alt` prop, screen-readers will not know what it is",
-      "url": "https://dev.w3.org/html5/alt-techniques"
-     }]
-   ]
- }]
+ * Runs a react-a11y rule or rules against a node.
+ * Returns a Promise of a test result.
  */
-const test = (jsx) => {
-  return new Promise((resolve, reject) => {
-    const allNodes = getAllNodesInSubtree(jsx);
-    const runTestsOnAllNodes = allNodes.map(runTests);
-    Promise.all(runTestsOnAllNodes)
-      .then(results => {
-        const failedResults = results.filter(result => !result.passed);
-        if (failedResults.length) {
-          failedResults.forEach(result => delete result.passed);
-          reject(failedResults);
-        } else {
-          resolve();
-        }
+const runRule = (node, rule) => {
+  return new Promise(resolve => {
+    if (!node.instance()) {
+      // If the Node is a React component, we can't test it.
+      resolve({
+        passed: true
       });
+    }
+    if (rule.map) {
+      // Some rules in react-a11y are arrays, so we'll need to iterate & test each.
+      runMultipleRules(node, rule, resolve);
+    }
+    if (rule.test) {
+      runSingleRule(node, rule, resolve);
+    }
   });
-}
+};
+
+/**
+ * runMultipleRules(node, rules, resolve)
+ *
+ * Runs a react-a11y rule set against a node.
+ * Returns a Promise of a test result.
+ */
+const runMultipleRules = (node, rules, resolve) => {
+  const results = rules.map(rule => testRule(node, rule));
+  if (results.includes(false)) {
+    // Some rule failed.
+    const failedRules = results.map((result, index) => {
+      if (result === false) {
+        return {
+          msg: rules[index]['msg'],
+          url: rules[index]['url']
+        };
+      }
+    }).filter(Boolean);
+    // Get failed rules, filtering out passing ones.
+    resolve({
+      passed: false,
+      failedRules: failedRules
+    });
+  } else {
+    resolve({
+      passed: true
+    });
+  }
+};
+
+/**
+ * runSingleRule(node, rule, resolve)
+ *
+ * Runs a react-a11y rule against a node.
+ * Returns a Promise of a test result.
+ */
+const runSingleRule = (node, rule, resolve) => {
+  const passed = testRule(node, rule);
+  if (passed) {
+    resolve({
+      passed: true
+    });
+  } else {
+    resolve({
+      passed: false,
+      failedRules: [{
+        msg: rule.msg,
+        url: rule.url
+      }]
+    });
+  }
+};
+
+/**
+ * testRule(node, rule)
+ *
+ * Tests a react-a11y rule against a node.
+ * Returns test result.
+ */
+const testRule = (node, rule) => {
+  // Test if the rule is for any node, or for this type of node in particular
+  if (!rule.tagName || rule.tagName === node.name()) {
+    return rule.test(
+      node.name(),
+      node.props(),
+      node.children,
+      {
+        options: []
+      }
+    );
+  } else {
+    return true; // Test isn't for this type of node, skip
+  }
+};
 
 /**
  * getSelectorForNode(node)
@@ -178,21 +189,10 @@ const getSelectorForNode = (node) => {
   return parentsTagNames.reverse().join(' > ');
 }
 
-/**
- * getAllNodesInSubtree(jsx)
- *
- * Returns wrapper of all nodes in subtree.
- */
-const getAllNodesInSubtree = (jsx) => {
-  const wrapper = mount(jsx);
-  const allNodes = wrapper.find(':not([___A11Y_TESTER___])'); // wrapper.find(*) isn't supported
-  return allNodes;
-}
-
 module.exports = {
   runRule,
   runTests,
   test,
   getAllNodesInSubtree,
   getSelectorForNode
-}
+};

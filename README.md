@@ -31,7 +31,44 @@ test(<App/>)
     // All tests passed! :-)
   })
   .catch(violations => {
-    // Handle a11y violations :-(
+    // There was a component with a11y violations. :-(
+  });
+```
+
+## Example
+
+```javascript
+const { test } = require('a11y-tester');
+
+const App = (props) => (
+  <div>
+    <img src='image.png'/>
+    <div onMouseOver={() => {}}/>
+  </div>
+);
+
+test(<App/>)
+  .then(() => {})
+  .catch(violations => {
+    /**
+    [{
+      "selector": "App > div > img",
+      "failedRules": [
+        [{
+          "msg": "The img does not have an `alt` prop, screen-readers will not know what it is",
+          "url": "https://dev.w3.org/html5/alt-techniques"
+        }]
+      ]
+    }, {
+      "selector": "App > div > div",
+      "failedRules": [
+        [{
+          "msg": "onMouseOver must be accompanied by onFocus for accessibility.",
+          "url": "http://webaim.org/techniques/javascript/eventhandlers#onmouseover"
+        }]
+      ]
+    }]
+     **/
   });
 ```
 
@@ -40,14 +77,6 @@ test(<App/>)
 * `react-a11y` patches React, this library doesn't.
 * Tests the same a11y rules as `react-a11y`.
 * Created to be used in tests, unlike `react-a11y`.
-
-## What works
-
-* Testing whether a component subtree has a11y violations with `test()`.
-
-## What's still TODO?
-
-* Still working on an API for `violations`.
 
 ## Run tests
 
