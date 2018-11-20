@@ -93,7 +93,7 @@ describe('a11y-tester', () => {
           .catch(err => { });
       });
     });
-    describe('Mutliple rules', () => {
+    describe('Multiple rules', () => {
       it('should test each rule, if rule has multiple', done => {
         const node = mount(<div/>);
         const testRule = [
@@ -375,19 +375,18 @@ describe('a11y-tester', () => {
         			"msg": "The img does not have an `alt` prop, screen-readers will not know what it is",
         			"url": "https://dev.w3.org/html5/alt-techniques"
         		}]
-        	]
-        }, {
-        	"selector": "div > div > button",
-        	"failedRules": [
-        		[{
-        			"msg": "You have an `onClick` handler but did not define an `onKeyDown`, `onKeyUp` or `onKeyPress` handler. Add it, and have the \"Space\" key do the same thing as an `onClick` handler.",
-        			"url": "https://www.w3.org/WAI/GL/wiki/Making_actions_keyboard_accessible_by_using_keyboard_event_handlers_with_WAI-ARIA_controls"
-        		}],
-        		[{
-        			"msg": "You have an `onClick` handler but did not define an `onKeyDown`, `onKeyUp` or `onKeyPress` handler. Add it, and have the \"Space\" key do the same thing as an `onClick` handler.",
-        			"url": "https://www.w3.org/WAI/GL/wiki/Making_actions_keyboard_accessible_by_using_keyboard_event_handlers_with_WAI-ARIA_controls"
-        		}]
-        	]
+        	]}, {
+            	"selector": "div > div > button",
+            	"failedRules": [
+            		[{
+            			"msg": "You have an `onClick` handler but did not define an `onKeyDown`, `onKeyUp` or `onKeyPress` handler. Add it, and have the \"Space\" key do the same thing as an `onClick` handler.",
+            			"url": "https://www.w3.org/WAI/GL/wiki/Making_actions_keyboard_accessible_by_using_keyboard_event_handlers_with_WAI-ARIA_controls"
+            		}],
+            		[{
+            			"msg": "You have an `onClick` handler but did not define an `onKeyDown`, `onKeyUp` or `onKeyPress` handler. Add it, and have the \"Space\" key do the same thing as an `onClick` handler.",
+            			"url": "https://www.w3.org/WAI/GL/wiki/Making_actions_keyboard_accessible_by_using_keyboard_event_handlers_with_WAI-ARIA_controls"
+            		}]
+            	]
         }]);
         done();
       });
