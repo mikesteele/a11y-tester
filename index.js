@@ -2,9 +2,11 @@ const mount = require('enzyme').mount;
 const rules = require('./node_modules/react-a11y/src/rules').default;
 
 const runRule = (node, rule) => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, _) => {
     if (!node.instance()) {
-      resolve();
+      resolve({
+        passed: true
+      });
     }
     if (rule.map) {
       const results = rule.map(r => {
@@ -15,10 +17,22 @@ const runRule = (node, rule) => {
         }
       });
       if (results.some(x => x === false)) {
-        const failedTests = results.filter(x => x === false);
-        reject(rule);
+        const failedRules = results.map((x, index) => {
+          if (x === false) {
+            return {
+              msg: rule[index]['msg'],
+              url: rule[index]['url']
+            };
+          }
+        }).filter(Boolean);
+        resolve({
+          passed: false,
+          failedRules: failedRules
+        });
       } else {
-        resolve();
+        resolve({
+          passed: true
+        });
       }
     }
     if (rule.test) {
@@ -31,12 +45,22 @@ const runRule = (node, rule) => {
         result = true
       }
       if (result) {
-        resolve(result);
+        resolve({
+          passed: true
+        });
       } else {
-        reject(rule);
+        resolve({
+          passed: false,
+          failedRules: [{
+            msg: rule.msg,
+            url: rule.url
+          }]
+        });
       }
     } else {
-      resolve();
+      resolve({
+        passed: true
+      });
     }
   });
 }
@@ -45,8 +69,23 @@ const runTests = (node) => {
   return new Promise((resolve, reject) => {
     const promises = Object.keys(rules).map(rule => {
       return runRule(node, rules[rule])
-    })
-    Promise.all(promises).then(resolve).catch(reject);
+    });
+    Promise.all(promises)
+      .then(results => {
+        const failedResults = results.filter(result => !result.passed);
+        if (failedResults.length) {
+          const failedRules = failedResults.map(result => result.failedRules);
+          resolve({
+            passed: false,
+            selector: getSelectorForNode(node),
+            failedRules: failedRules
+          });
+        } else {
+          resolve({
+            passed: true
+          });
+        }
+      });
   });
 }
 
@@ -54,7 +93,16 @@ const test = (jsx) => {
   return new Promise((resolve, reject) => {
     const allNodes = getAllNodesInSubtree(jsx);
     const runTestsOnAllNodes = allNodes.map(runTests);
-    Promise.all(runTestsOnAllNodes).then(resolve).catch(reject);
+    Promise.all(runTestsOnAllNodes)
+      .then(results => {
+        const failedResults = results.filter(result => !result.passed);
+        if (failedResults.length) {
+          failedResults.forEach(result => delete result.passed);
+          reject(failedResults);
+        } else {
+          resolve();
+        }
+      });
   });
 }
 
