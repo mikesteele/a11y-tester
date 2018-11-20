@@ -28,6 +28,7 @@ const {
   runTests
 } = a11yTester;
 
+
 describe('a11y-tester', () => {
   describe('getAllNodesInSubtree', () => {
     it('should test all nodes in subtree', () => {
@@ -44,7 +45,7 @@ describe('a11y-tester', () => {
   });
   describe('test', () => {
     it('should call runTests on all nodes in subtree', done => {
-      const stub = sinon.stub();
+      const stub = sinon.stub().returns(Promise.resolve({ passed: true }));
       a11yTester.__set__('runTests', stub);
       test(
         <div>
@@ -65,7 +66,7 @@ describe('a11y-tester', () => {
   });
   describe('runTests', () => {
     it('should call runRule for every rule', done => {
-      const stub = sinon.stub();
+      const stub = sinon.stub().returns(Promise.resolve([])); // TODO - Should resolve to what?
       a11yTester.__set__('runRule', stub);
       const node = mount(<div/>);
       runTests(node)
@@ -75,7 +76,6 @@ describe('a11y-tester', () => {
           a11yTester.__set__('runRule', runRule);
           done();
         }).catch(err => {});
-
     });
   });
   describe('runRule', () => {
@@ -87,14 +87,13 @@ describe('a11y-tester', () => {
         const node = shallow(<Skip/>);
         runRule(node, { test: () => true})
           .then(result => {
+            expect(result.passed).to.be.true;
             done();
           })
-          .catch(err => {
-            console.warn(err);
-          })
+          .catch(err => { });
       });
     });
-    describe('Mutliple rules', () => {
+    describe('Multiple rules', () => {
       it('should test each rule, if rule has multiple', done => {
         const node = mount(<div/>);
         const testRule = [
@@ -111,10 +110,11 @@ describe('a11y-tester', () => {
         ]
         runRule(node, testRule)
           .then(result => {
+            expect(result.passed).to.be.true;
             done();
           }).catch(err => {});
       });
-      it('should reject if one rule of mutliple fails', done => {
+      it('should fail if one rule of mutliple fails', done => {
         const node = mount(<div/>);
         const testRule = [
           {
@@ -129,8 +129,8 @@ describe('a11y-tester', () => {
           }
         ]
         runRule(node, testRule)
-          .then(result => {})
-          .catch(err => {
+          .then(result => {
+            expect(result.passed).to.be.false;
             done();
           });
       });
@@ -150,9 +150,9 @@ describe('a11y-tester', () => {
           }
         ]
         runRule(node, testRule)
-          .then(result => {})
-          .catch(err => {
+          .then(result => {
             // Should fail, because the first test was run.
+            expect(result.passed).to.be.false;
             done();
           });
       });
@@ -174,6 +174,7 @@ describe('a11y-tester', () => {
         runRule(node, testRule)
           .then(result => {
             // Should pass, because the first test wasn't run.
+            expect(result.passed).to.be.true;
             done();
           })
           .catch(err => {});
@@ -189,6 +190,7 @@ describe('a11y-tester', () => {
         ]
         runRule(node, testRule)
           .then(result => {
+            expect(result.passed).to.be.true;
             done();
           })
           .catch(err => {});
@@ -203,10 +205,11 @@ describe('a11y-tester', () => {
           }
         ]
         runRule(node, testRule)
-          .then(result => {})
-          .catch(err => {
+          .then(result => {
+            expect(result.passed).to.be.false;
             done();
-          });
+          })
+          .catch(err => {});
       });
     });
     describe('Single rules', () => {
@@ -219,6 +222,7 @@ describe('a11y-tester', () => {
         };
         runRule(node, testRule)
           .then(result => {
+            expect(result.passed).to.be.true;
             done();
           })
           .catch(err => {});
@@ -231,10 +235,11 @@ describe('a11y-tester', () => {
           }
         };
         runRule(node, testRule)
-          .then(result => {})
-          .catch(err => {
+          .then(result => {
+            expect(result.passed).to.be.false;
             done();
-          });
+          })
+          .catch(err => {});
       });
       it('should test if tagName matches node', done => {
         const node = mount(<img src='image.jpg'/>);
@@ -245,10 +250,11 @@ describe('a11y-tester', () => {
           }
         };
         runRule(node, testRule)
-          .then(result => {})
-          .catch(err => {
+          .then(result => {
+            expect(result.passed).to.be.false;
             done();
-          });
+          })
+          .catch(err => {});
       });
       it('should pass if test tagName doesn\'t match node', done => {
         const node = mount(<img src='image.jpg'/>);
@@ -260,6 +266,7 @@ describe('a11y-tester', () => {
         };
         runRule(node, testRule)
           .then(result => {
+            expect(result.passed).to.be.true;
             done();
           })
           .catch(err => {});
@@ -309,9 +316,9 @@ describe('a11y-tester', () => {
           const node = mount(pass[0].render(React));
           runRule(node, rule)
             .then(result => {
+              expect(result.passed).to.be.true;
               done();
-            })
-            .catch(err => {});
+            });
         });
         it(`${file} should fail`, done => {
           const test = require(`./node_modules/react-a11y/src/rules/${file}`);
@@ -319,12 +326,82 @@ describe('a11y-tester', () => {
           const { pass, fail } = test;
           const node = mount(fail[0].render(React));
           runRule(node, rule)
-            .then(result => {})
-            .catch(err => {
+            .then(result => {
+              expect(result.passed).to.be.false;
               done();
             });
         });
       });
     });
   });
+  describe('violations', () => {
+    it('should report a violation as expected', done => {
+      test(
+        <div>
+          <img src='image.jpg'/>
+        </div>
+      )
+      .then(() => {})
+      .catch(violations => {
+        expect(violations).to.have.deep.members([{
+          "selector": "div > img",
+          "failedRules": [
+            [{
+             "msg":"The img does not have an `alt` prop, screen-readers will not know what it is",
+             "url":"https://dev.w3.org/html5/alt-techniques"
+            }]
+          ]
+        }]);
+        done();
+      });
+    });
+    it('should report multiple violations as expected', done => {
+      test(
+        <div>
+          <img src='image.jpg'/>
+          <div>
+            <button onClick={() => { window.alert('!')}}>
+              Click here!
+            </button>
+          </div>
+        </div>
+      )
+      .then(() => {})
+      .catch(violations => {
+        expect(violations).to.have.deep.members([{
+        	"selector": "div > img",
+        	"failedRules": [
+        		[{
+        			"msg": "The img does not have an `alt` prop, screen-readers will not know what it is",
+        			"url": "https://dev.w3.org/html5/alt-techniques"
+        		}]
+        	]}, {
+            	"selector": "div > div > button",
+            	"failedRules": [
+            		[{
+            			"msg": "You have an `onClick` handler but did not define an `onKeyDown`, `onKeyUp` or `onKeyPress` handler. Add it, and have the \"Space\" key do the same thing as an `onClick` handler.",
+            			"url": "https://www.w3.org/WAI/GL/wiki/Making_actions_keyboard_accessible_by_using_keyboard_event_handlers_with_WAI-ARIA_controls"
+            		}],
+            		[{
+            			"msg": "You have an `onClick` handler but did not define an `onKeyDown`, `onKeyUp` or `onKeyPress` handler. Add it, and have the \"Space\" key do the same thing as an `onClick` handler.",
+            			"url": "https://www.w3.org/WAI/GL/wiki/Making_actions_keyboard_accessible_by_using_keyboard_event_handlers_with_WAI-ARIA_controls"
+            		}]
+            	]
+        }]);
+        done();
+      });
+    });
+  });
 });
+const App = (props) => (
+  <div>
+    <img src='image.png'/>
+    <div onMouseOver={() => {}}/>
+  </div>
+)
+
+it('x', () => {
+  test( <App/>).then().catch(err => {
+      console.warn(JSON.stringify(err));
+    })
+})
